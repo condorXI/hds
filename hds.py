@@ -622,7 +622,7 @@ def load_hotspot_data_and_status():
     # dev
     ### API Sync
     hs["api_sync"] = "*NSYNC"
-    block_gap_num = int(hs["block"] - hs["height"])
+    block_gap_num = int(hs["block"] or 0 - hs["height"] or 0)
     block_gap_num = 0 if block_gap_num <= 0 else block_gap_num
     api_block_gap_exceeded = (
         True if block_gap_num >= sync_blocks_behind * api_sync_lag_multiple else False
