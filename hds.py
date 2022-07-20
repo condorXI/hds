@@ -67,7 +67,6 @@ history_length_max = 200  # Trim activity history when reaches this length
 history_length_min = 125  # when trim activity history, leave newest
 sync_blocks_behind = 100  # Blocks Behind blockchain to be considered out of sync
 api_sync_lag_multiple = 5  # Multiply sync_blocks_behind * api_sync_lag_multiple to balance with Helium API "Sync Status"
-config_status_report = False # read status.json from bobcat
 config_miner_report = True # read miner.json from bobcat
 # pop_status_minutes = 7  # MINUTES remove status msg when sending activity if activity is recent to last activity sent. keep discord tidy
 # interval_pop_status_seconds = int(60 * pop_status_minutes)
@@ -121,11 +120,6 @@ def local_bobcat_miner_report():
             status = ""
             try:
                 # LIVE local data
-                if bool(config_status_report):
-                    bobcat_status_json = config["bobcat_local_endpoint"] + "status.json"
-                    bobcat_request = requests.get(bobcat_status_json, headers=headers)
-                    data_status = bobcat_request.json()
-
                 if bool(config_miner_report):
                     bobcat_miner_json = config["bobcat_local_endpoint"] + "miner.json"
                     bobcat_request = requests.get(bobcat_miner_json, headers=headers)
@@ -147,76 +141,7 @@ def local_bobcat_miner_report():
 
             else:
                 try:
-
-                    if bool(config_status_report):
-                        # miner_height
-                        miner_height_int = int(data_status["miner_height"])
-                        miner_height = "{:,}".format(miner_height_int)
-                        if "miner_height" not in config["last"]["report"]:
-                            config["last"]["report"]["miner_height"] = ""
-                        if miner_height_int != config["last"]["report"]["miner_height"]:
-                            config["last"]["report"]["miner_height"] = miner_height_int
-                            miner_height = f"**{miner_height}**"
-
-                        # miner_block
-                        miner_block_int = int(data_status["blockchain_height"])
-                        miner_block = "{:,}".format(miner_block_int)
-                        if "miner_block" not in config["last"]["report"]:
-                            config["last"]["report"]["miner_block"] = ""
-                        if miner_block_int != config["last"]["report"]["miner_block"]:
-                            config["last"]["report"]["miner_block"] = miner_block_int
-                            miner_block = f"**{miner_block}**"
-
-                        # miner_epoch
-                        miner_epoch_int = int(data_status["epoch"])
-                        miner_epoch = "{:,}".format(miner_epoch_int)
-                        if "miner_epoch" not in config["last"]["report"]:
-                            config["last"]["report"]["miner_epoch"] = ""
-                        if miner_epoch_int != config["last"]["report"]["miner_epoch"]:
-                            config["last"]["report"]["miner_epoch"] = miner_epoch_int
-                            miner_epoch = f"**{miner_epoch}**"
-
-                        # miner_gap
-                        miner_gap_int = int(data_status["gap"])
-                        miner_gap_int = 0 if miner_gap_int < 0 else miner_gap_int
-                        miner_gap = "{:,}".format(miner_gap_int)
-                        if "miner_gap" not in config["last"]["report"]:
-                            config["last"]["report"]["miner_gap"] = ""
-                        if miner_gap != config["last"]["report"]["miner_gap"]:
-                            config["last"]["report"]["miner_gap"] = miner_gap_int
-                            miner_gap = f"**({miner_gap})**"
-                            miner_gap = (
-                                "**0**"
-                                if miner_gap == "**(0)**" or miner_gap_int <= 0
-                                else miner_gap
-                            )
-                        else:
-                            miner_gap = f"({miner_gap})"
-                            miner_gap = (
-                                "Synced"
-                                if miner_gap == "(0)" or miner_gap_int <= 0
-                                else miner_gap
-                            )
-
-
-                        """
-                        # miner_sync . Not Synced if more than 100 block behind miner_block
-                        miner_sync = (
-                            "Syncing"
-                            if miner_gap_int > sync_blocks_behind  # 0
-                            else "Synced"
-                            # "Synced" if miner_gap_int <= sync_blocks_behind else "Syncing"
-                        )
-                    """
-                        # get directly from status.json
-                        miner_sync = data_status["status"]
-
-                        if "miner_sync" not in config["last"]["report"]:
-                            config["last"]["report"]["miner_sync"] = ""
-                        if miner_sync != config["last"]["report"]["miner_sync"]:
-                            config["last"]["report"]["miner_sync"] = miner_sync
-                        miner_sync = f"**{miner_sync}**"
-
+ 
                     if bool(config_miner_report):
                         # miner_temp = data_miner["temp_alert"].title()
                         miner_temp = data_miner["temp0"]
@@ -232,31 +157,6 @@ def local_bobcat_miner_report():
                         if miner_state != config["last"]["report"]["miner_state"]:
                             config["last"]["report"]["miner_state"] = miner_state
                             miner_state = f"**{miner_state}**"
-
-
-                        # 2022-06 not used anymore because of light hotspots
-                        """
-                        # miner_port_44158
-
-                        # UPDATE - check peerbook for p2p(open) or ip4(relayed)
-
-                        new_miner_port_44158 = False
-                        miner_port_44158 = data_miner["ports"]["44158"].title()
-                        if "miner_port_44158" not in config["last"]["report"]:
-                            config["last"]["report"]["miner_port_44158"] = ""
-                        if miner_port_44158 != config["last"]["report"]["miner_port_44158"]:
-                            config["last"]["report"]["miner_port_44158"] = miner_port_44158
-                            new_miner_port_44158 = True
-
-                        if miner_port_44158 == "Open":
-                            miner_port_44158 = (
-                                "✅ **Open**" if bool(new_miner_port_44158) else "✅  Open"
-                            )
-                        else:
-                            miner_port_44158 = f"💩 **{miner_port_44158}, (RELAYED)**"
-"""
-
-
 
                         # helium OTA version
                         miner_ota_helium = data_miner["miner"]["Image"]
@@ -276,29 +176,18 @@ def local_bobcat_miner_report():
                             config["last"]["report"]["miner_ota_bobcat"] = miner_ota_bobcat
                             miner_ota_bobcat = f"**{miner_ota_bobcat}**"
 
-                    report_status = ""
                     report_miner = ""
 
-                    if bool(config_status_report):
-                        report_status = (
-                            "\n"
-                            + f"Sync: {miner_sync}  Height: 📦 {miner_height}  Gap: {miner_gap}"
-                        )
                     if bool(config_miner_report):
                         report_miner = (
                             "\n"
-                            + f"Status: {miner_state}  Temp: {miner_temp}  Epoch: {miner_epoch}"
+                            + f"Status: {miner_state}  Temp: {miner_temp}"
                             + "\n"
                             + f"Firmware: Helium {miner_ota_helium} | Bobcat {miner_ota_bobcat}"
-                            # + "\n"
-                            # + f"Inbound (44158):  {miner_port_44158}"
-                            # + "\n"
-                            # + "Outbound:"
                         )
 
                     report = (
-                        f"🔩 **MINERity Report**  `{nice_date(hs['now'])}`"
-                        + report_status
+                        f"🔩 **Miner Report**  `{nice_date(hs['now'])}`"
                         + report_miner
                     )
 
