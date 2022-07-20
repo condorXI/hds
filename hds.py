@@ -43,6 +43,7 @@ import requests
 import json
 import uuid
 import logging
+import shutil
 from datetime import datetime
 from discord_webhook import DiscordWebhook
 
@@ -370,6 +371,10 @@ def load_activity_data():
             helium_api_endpoint + "hotspots/" + config["hotspot"] + "/activity/"
         )
         activity_request = requests.get(activity_endpoint, headers=headers)
+
+        with open('debug.json', 'wb') as out_file:
+            shutil.copyfileobj(activity_request, outfile)
+
         data = activity_request.json()
         if data["data"]:
             logging.debug("Got some data, will not continue with cursor.")
