@@ -373,7 +373,7 @@ def load_activity_data():
         activity_request = requests.get(activity_endpoint, headers=headers)
 
         with open('debug.json', 'wb') as out_file:
-            shutil.copyfileobj(activity_request, outfile)
+            shutil.copyfileobj(activity_request, out_file)
 
         data = activity_request.json()
         if data["data"]:
